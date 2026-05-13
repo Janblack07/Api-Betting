@@ -12,6 +12,432 @@
         }
     ],
     "paths": {
+        "/admin/api-usage": {
+            "get": {
+                "tags": [
+                    "Admin API Usage"
+                ],
+                "summary": "Ver historial de consumo de The Odds API",
+                "description": "HU-17: Permite al administrador consultar el historial de consumo de créditos, requests usados y requests restantes del proveedor The Odds API.",
+                "operationId": "2a97f2ba01214f954a3e2dc3f9b11cf7",
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "query",
+                        "description": "Proveedor externo. Por defecto: the_odds_api",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "the_odds_api"
+                    },
+                    {
+                        "name": "sport_key",
+                        "in": "query",
+                        "description": "Filtrar consumo por deporte",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "soccer_australia_aleague"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Fecha inicial del historial",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-01"
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "Fecha final del historial",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-31"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Cantidad de registros por página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 15
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historial de consumo obtenido correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Historial de consumo obtenido correctamente."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "provider": {
+                                                                "type": "string",
+                                                                "example": "the_odds_api"
+                                                            },
+                                                            "endpoint": {
+                                                                "type": "string",
+                                                                "example": "/sports/soccer_australia_aleague/events"
+                                                            },
+                                                            "sport_key": {
+                                                                "type": "string",
+                                                                "example": "soccer_australia_aleague"
+                                                            },
+                                                            "regions": {
+                                                                "type": "string",
+                                                                "example": "au"
+                                                            },
+                                                            "markets": {
+                                                                "type": "string",
+                                                                "example": "h2h"
+                                                            },
+                                                            "credits_used": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "requests_used": {
+                                                                "type": "integer",
+                                                                "example": 20
+                                                            },
+                                                            "requests_remaining": {
+                                                                "type": "integer",
+                                                                "example": 480
+                                                            },
+                                                            "response_status": {
+                                                                "type": "integer",
+                                                                "example": 200
+                                                            },
+                                                            "requested_at": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/api-usage/summary": {
+            "get": {
+                "tags": [
+                    "Admin API Usage"
+                ],
+                "summary": "Ver resumen mensual de consumo de The Odds API",
+                "description": "HU-17: Devuelve resumen mensual de créditos usados, requests realizados, requests restantes y consumo agrupado por endpoint y deporte.",
+                "operationId": "363bb3f2037885c5a8849d5c1622c5b8",
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Mes a consultar en formato YYYY-MM. Si no se envía, usa el mes actual.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "2026-05"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Resumen de consumo obtenido correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Resumen de consumo obtenido correctamente."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "period": {
+                                                    "properties": {
+                                                        "month": {
+                                                            "type": "string",
+                                                            "example": "2026-05"
+                                                        },
+                                                        "from": {
+                                                            "type": "string",
+                                                            "example": "2026-05-01"
+                                                        },
+                                                        "to": {
+                                                            "type": "string",
+                                                            "example": "2026-05-31"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "totals": {
+                                                    "properties": {
+                                                        "total_requests": {
+                                                            "type": "integer",
+                                                            "example": 25
+                                                        },
+                                                        "total_credits_used": {
+                                                            "type": "integer",
+                                                            "example": 18
+                                                        },
+                                                        "last_requests_used": {
+                                                            "type": "integer",
+                                                            "example": 25
+                                                        },
+                                                        "last_requests_remaining": {
+                                                            "type": "integer",
+                                                            "example": 475
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "by_endpoint": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "by_sport": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/settings": {
+            "get": {
+                "tags": [
+                    "Admin Settings"
+                ],
+                "summary": "Listar configuraciones del sistema",
+                "description": "HU-18: Permite al administrador consultar la región, mercado y frecuencia de sincronización configurados para The Odds API.",
+                "operationId": "7fe6af869c93c38783b399599da88a38",
+                "responses": {
+                    "200": {
+                        "description": "Configuraciones obtenidas correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Configuraciones obtenidas correctamente."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "setting_key": {
+                                                        "type": "string",
+                                                        "example": "odds.default_region"
+                                                    },
+                                                    "setting_value": {
+                                                        "type": "string",
+                                                        "example": "eu"
+                                                    },
+                                                    "typed_value": {
+                                                        "example": "eu"
+                                                    },
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Región por defecto para consultar cuotas."
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Admin Settings"
+                ],
+                "summary": "Actualizar configuración de cuotas",
+                "description": "HU-18: Permite al administrador cambiar la región por defecto, mercado por defecto e intervalo de sincronización sin modificar código.",
+                "operationId": "1fffbb5a6b4e001ce02421e31eeb90b4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "odds.default_region": {
+                                        "type": "string",
+                                        "example": "eu",
+                                        "enum": [
+                                            "us",
+                                            "uk",
+                                            "eu",
+                                            "au"
+                                        ]
+                                    },
+                                    "odds.default_market": {
+                                        "type": "string",
+                                        "example": "h2h",
+                                        "enum": [
+                                            "h2h",
+                                            "spreads",
+                                            "totals",
+                                            "outrights"
+                                        ]
+                                    },
+                                    "odds.sync_interval_seconds": {
+                                        "type": "integer",
+                                        "example": 120,
+                                        "maximum": 3600,
+                                        "minimum": 15
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Configuraciones actualizadas correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Configuraciones actualizadas correctamente."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/admin/users/{user}/account": {
             "patch": {
                 "tags": [
@@ -959,6 +1385,14 @@
         {
             "name": "Usuario",
             "description": "HU-04 Perfil"
+        },
+        {
+            "name": "Admin API Usage",
+            "description": "Admin API Usage"
+        },
+        {
+            "name": "Admin Settings",
+            "description": "Admin Settings"
         },
         {
             "name": "Odds",

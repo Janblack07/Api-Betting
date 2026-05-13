@@ -14,6 +14,9 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        $this->call([
+            SystemSettingSeeder::class,
+        ]);
         foreach (['admin', 'customer', 'operator'] as $roleName) {
             Role::query()->firstOrCreate(
                 ['name' => $roleName, 'guard_name' => 'web']
@@ -44,4 +47,5 @@ class DatabaseSeeder extends Seeder
         $customer->syncRoles(['customer']);
         $walletCreator->createForUser($customer);
     }
+
 }

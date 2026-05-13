@@ -10,19 +10,31 @@ use App\Modules\Odds\Models\OddsSnapshot;
 use App\Modules\Odds\Models\SportEvent;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Modules\Admin\Services\SystemSettingService;
+use App\Modules\Odds\Events\OddsUpdated;
 
 class SyncEventOddsAction
 {
     public function __construct(
-        private readonly OddsApiClient $client
-    ) {
-    }
+    private readonly OddsApiClient $client,
+    private readonly SystemSettingService $systemSettingService
+) {
+}
 
     public function execute(
         SportEvent $event,
         ?string $regions = null,
         ?string $markets = null
     ): array {
+        $regions = $regions ?: $this->systemSettingService->get(
+            'odds.default_region',
+            config('services.odds_api.default_region', 'eu')
+        );
+
+        $markets = $markets ?: $this->systemSettingService->get(
+            'odds.default_market',
+            config('services.odds_api.default_market', 'h2h')
+        );
         $result = $this->client->getEventOdds(
             sportKey: $event->sport_key,
             eventId: $event->external_event_id,
@@ -145,6 +157,14 @@ class SyncEventOddsAction
                 'requested_at' => now(),
             ]);
         });
+        if ($summary['created'] > 0 || $summary['deactivated'] > 0) {
+            event(new OddsUpdated(
+                sportKey: $event->sport_key,
+                eventId: $event->id,
+                externalEventId: $event->external_event_id,
+                summary: $summary
+            ));
+        }
 
         return $summary;
     }

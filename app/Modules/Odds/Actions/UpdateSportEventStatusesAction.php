@@ -4,6 +4,7 @@ namespace App\Modules\Odds\Actions;
 
 use App\Modules\Admin\Models\ApiUsageLog;
 use App\Modules\Odds\Clients\OddsApiClient;
+use App\Modules\Odds\Events\SportEventStatusUpdated;
 use App\Modules\Odds\Models\Sport;
 use App\Modules\Odds\Models\SportEvent;
 use Illuminate\Support\Facades\DB;
@@ -23,17 +24,36 @@ class UpdateSportEventStatusesAction
             'sports_processed' => 0,
         ];
 
-        $summary['marked_live'] = SportEvent::query()
+
+        $scheduledEvents = SportEvent::query()
             ->where('status', 'scheduled')
             ->where('commence_time', '<=', now())
-            ->update([
+            ->get();
+
+        foreach ($scheduledEvents as $event) {
+            $event->update([
                 'status' => 'live',
                 'is_live' => true,
             ]);
 
+            $summary['marked_live']++;
+
+            event(new SportEventStatusUpdated(
+                sportKey: $event->sport_key,
+                eventId: $event->id,
+                externalEventId: $event->external_event_id,
+                status: $event->status,
+                isLive: (bool) $event->is_live,
+                isActive: (bool) $event->is_active
+            ));
+        }
+
+
         $sports = Sport::query()
             ->where('active', true)
-            ->when($sportKey, fn ($query) => $query->where('sport_key', $sportKey))
+            ->when($sportKey, function ($query, string $sportKey) {
+                $query->where('sport_key', $sportKey);
+            })
             ->get();
 
         foreach ($sports as $sport) {
@@ -53,18 +73,30 @@ class UpdateSportEventStatusesAction
                         continue;
                     }
 
-                    $updated = SportEvent::query()
+                    $events = SportEvent::query()
                         ->where('external_event_id', $scorePayload['id'])
                         ->whereIn('status', ['scheduled', 'live'])
-                        ->update([
+                        ->get();
+
+                    foreach ($events as $event) {
+                        $event->update([
                             'status' => 'completed',
                             'is_live' => false,
                             'is_active' => false,
                             'raw_payload' => $scorePayload,
-                            'updated_at' => now(),
                         ]);
 
-                    $summary['marked_completed'] += $updated;
+                        $summary['marked_completed']++;
+
+                        event(new SportEventStatusUpdated(
+                            sportKey: $event->sport_key,
+                            eventId: $event->id,
+                            externalEventId: $event->external_event_id,
+                            status: $event->status,
+                            isLive: (bool) $event->is_live,
+                            isActive: (bool) $event->is_active
+                        ));
+                    }
                 }
 
                 ApiUsageLog::query()->create([
@@ -74,8 +106,12 @@ class UpdateSportEventStatusesAction
                     'regions' => null,
                     'markets' => null,
                     'credits_used' => (int) ($headers['requests_last'] ?? 0),
-                    'requests_used' => isset($headers['requests_used']) ? (int) $headers['requests_used'] : null,
-                    'requests_remaining' => isset($headers['requests_remaining']) ? (int) $headers['requests_remaining'] : null,
+                    'requests_used' => isset($headers['requests_used'])
+                        ? (int) $headers['requests_used']
+                        : null,
+                    'requests_remaining' => isset($headers['requests_remaining'])
+                        ? (int) $headers['requests_remaining']
+                        : null,
                     'response_status' => $status,
                     'requested_at' => now(),
                 ]);
