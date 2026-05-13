@@ -17,10 +17,15 @@ return [
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
+
     'odds_api' => [
     'key' => env('ODDS_API_KEY'),
     'base_url' => env('ODDS_API_BASE_URL', 'https://api.the-odds-api.com/v4'),
     'timeout' => env('ODDS_API_TIMEOUT', 15),
+    'default_region' => env('ODDS_DEFAULT_REGION', 'eu'),
+    'default_market' => env('ODDS_DEFAULT_MARKET', 'h2h'),
+    'default_format' => env('ODDS_DEFAULT_FORMAT', 'decimal'),
+    'default_date_format' => env('ODDS_DEFAULT_DATE_FORMAT', 'iso'),
     ],
 
     'resend' => [

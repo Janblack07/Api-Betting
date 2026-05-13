@@ -18,9 +18,15 @@ class SportEventResource extends JsonResource
             'away_team' => $this->away_team,
             'commence_time' => $this->commence_time?->toISOString(),
             'status' => $this->status,
+            'status_label' => $this->statusLabel(),
             'is_live' => $this->is_live,
+            'is_closed' => $this->isClosed(),
             'is_active' => $this->is_active,
             'available_for_betting' => $this->isAvailableForBetting(),
+            'odds' => $this->when(
+                $this->relationLoaded('oddsSnapshots'),
+                fn () => OddsSnapshotResource::collection($this->oddsSnapshots)
+            ),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

@@ -4,7 +4,6 @@ namespace App\Modules\Odds\Models;
 
 use App\Modules\Betting\Models\BetSelection;
 use App\Modules\Betting\Models\EventResult;
-use App\Modules\Odds\Models\OddsSnapshot;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -56,5 +55,28 @@ class SportEvent extends Model
     {
         return $this->is_active === true
             && in_array($this->status, ['scheduled', 'live'], true);
+    }
+
+    public function isClosed(): bool
+    {
+        return in_array($this->status, [
+            'completed',
+            'cancelled',
+            'suspended',
+            'unavailable',
+        ], true);
+    }
+
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'scheduled' => 'Programado',
+            'live' => 'En vivo',
+            'completed' => 'Finalizado',
+            'cancelled' => 'Cancelado',
+            'suspended' => 'Suspendido',
+            'unavailable' => 'No disponible',
+            default => 'Desconocido',
+        };
     }
 }

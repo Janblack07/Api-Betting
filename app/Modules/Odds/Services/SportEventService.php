@@ -28,4 +28,15 @@ class SportEventService
             ->orderBy('commence_time')
             ->paginate((int) ($filters['per_page'] ?? 15));
     }
+    public function getEventDetail(SportEvent $event): SportEvent
+{
+    return $event->load([
+        'sport',
+        'oddsSnapshots' => fn ($query) => $query
+            ->where('is_active', true)
+            ->orderBy('market_key')
+            ->orderBy('bookmaker_title')
+            ->orderBy('selection_name'),
+    ]);
+}
 }

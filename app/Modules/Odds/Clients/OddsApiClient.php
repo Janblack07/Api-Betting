@@ -30,24 +30,43 @@ class OddsApiClient
             'all' => 'true',
         ]);
 
-        return [
-            'data' => $response->json() ?? [],
-            'headers' => $this->usageHeaders($response),
-            'status' => $response->status(),
-        ];
+        return $this->formatResponse($response);
     }
 
     public function getEventsBySport(string $sportKey): array
     {
         $response = $this->request("/sports/{$sportKey}/events", [
-            'dateFormat' => 'iso',
+            'dateFormat' => config('services.odds_api.default_date_format', 'iso'),
         ]);
 
-        return [
-            'data' => $response->json() ?? [],
-            'headers' => $this->usageHeaders($response),
-            'status' => $response->status(),
-        ];
+        return $this->formatResponse($response);
+    }
+
+    public function getEventOdds(
+        string $sportKey,
+        string $eventId,
+        ?string $regions = null,
+        ?string $markets = null,
+        ?string $oddsFormat = null
+    ): array {
+        $response = $this->request("/sports/{$sportKey}/events/{$eventId}/odds", [
+            'regions' => $regions ?: config('services.odds_api.default_region', 'eu'),
+            'markets' => $markets ?: config('services.odds_api.default_market', 'h2h'),
+            'oddsFormat' => $oddsFormat ?: config('services.odds_api.default_format', 'decimal'),
+            'dateFormat' => config('services.odds_api.default_date_format', 'iso'),
+        ]);
+
+        return $this->formatResponse($response);
+    }
+
+    public function getScoresBySport(string $sportKey, int $daysFrom = 1): array
+    {
+        $response = $this->request("/sports/{$sportKey}/scores", [
+            'daysFrom' => $daysFrom,
+            'dateFormat' => config('services.odds_api.default_date_format', 'iso'),
+        ]);
+
+        return $this->formatResponse($response);
     }
 
     private function request(string $uri, array $query = []): Response
@@ -72,6 +91,15 @@ class OddsApiClient
                 'No se pudo conectar con The Odds API: ' . $exception->getMessage()
             );
         }
+    }
+
+    private function formatResponse(Response $response): array
+    {
+        return [
+            'data' => $response->json() ?? [],
+            'headers' => $this->usageHeaders($response),
+            'status' => $response->status(),
+        ];
     }
 
     private function usageHeaders(Response $response): array
