@@ -17,8 +17,6 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware(['auth:sanctum', 'account.active', 'role:admin'])->group(function (): void {
         Route::patch('admin/users/{user}/account', [AdminUserAccountController::class, 'update']);
     });
-use Illuminate\Support\Facades\Route;
-
 require base_path('app/Modules/Odds/Routes/api.php');
 
 Route::get('/health', function () {
@@ -31,4 +29,6 @@ Route::get('/health', function () {
             'timestamp' => now()->toISOString(),
         ],
     ]);
+});
+
 });
