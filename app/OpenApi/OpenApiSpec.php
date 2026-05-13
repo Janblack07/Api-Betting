@@ -7,7 +7,7 @@ use OpenApi\Attributes as OA;
 #[OA\Info(
     version: '1.0.0',
     title: 'Casa de Apuestas API',
-    description: 'Historias de usuario HU-01 a HU-05: registro, login, logout, perfil y moderación de cuentas.'
+    description: 'API para casa de apuestas: autenticación, usuarios, deportes, eventos, cuotas, wallet y apuestas.'
 )]
 #[OA\Server(
     url: '/api/v1',
@@ -18,7 +18,7 @@ use OpenApi\Attributes as OA;
     type: 'http',
     scheme: 'bearer',
     bearerFormat: 'Sanctum',
-    description: 'Token personal de acceso (Authorization: Bearer {token})'
+    description: 'Token personal de acceso. Formato: Authorization: Bearer {token}'
 )]
 class OpenApiSpec
 {

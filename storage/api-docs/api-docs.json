@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "Casa de Apuestas API",
-        "description": "Historias de usuario HU-01 a HU-05: registro, login, logout, perfil y moderación de cuentas.",
+        "description": "API para casa de apuestas: autenticación, usuarios, deportes, eventos, cuotas, wallet y apuestas.",
         "version": "1.0.0"
     },
     "servers": [
@@ -271,13 +271,677 @@
                     }
                 ]
             }
+        },
+        "/events/{sportEvent}/odds": {
+            "get": {
+                "tags": [
+                    "Odds"
+                ],
+                "summary": "Listar cuotas disponibles de un evento",
+                "description": "HU-16: Devuelve cuotas activas agrupadas por mercado y bookmaker.",
+                "operationId": "9b267f38643693f2022f2f330b8d1e73",
+                "parameters": [
+                    {
+                        "name": "sportEvent",
+                        "in": "path",
+                        "description": "ID interno del evento deportivo",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cuotas disponibles obtenidas correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cuotas disponibles obtenidas correctamente."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "event_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "external_event_id": {
+                                                    "type": "string",
+                                                    "example": "abc123"
+                                                },
+                                                "sport_key": {
+                                                    "type": "string",
+                                                    "example": "soccer_epl"
+                                                },
+                                                "markets": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Evento no encontrado"
+                    }
+                }
+            }
+        },
+        "/admin/odds/sync": {
+            "post": {
+                "tags": [
+                    "Admin Odds"
+                ],
+                "summary": "Sincronizar cuotas desde The Odds API",
+                "description": "HU-13, HU-14 y HU-15: Consulta cuotas por deporte, región y mercado; guarda snapshots y detecta cambios por hash.",
+                "operationId": "0e6454998b59259290165bb219baf64e",
+                "parameters": [
+                    {
+                        "name": "sport_key",
+                        "in": "query",
+                        "description": "Filtrar eventos por deporte",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "soccer_epl"
+                    },
+                    {
+                        "name": "event_id",
+                        "in": "query",
+                        "description": "ID interno del evento específico",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    },
+                    {
+                        "name": "regions",
+                        "in": "query",
+                        "description": "Regiones de bookmakers",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "eu"
+                    },
+                    {
+                        "name": "markets",
+                        "in": "query",
+                        "description": "Mercados de apuesta",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "h2h"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Cantidad máxima de eventos a procesar",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 10
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cuotas sincronizadas correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cuotas sincronizadas correctamente."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "events_processed": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "created": {
+                                                    "type": "integer",
+                                                    "example": 6
+                                                },
+                                                "unchanged": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "deactivated": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "500": {
+                        "description": "Error al sincronizar cuotas"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/sports/active": {
+            "get": {
+                "tags": [
+                    "Sports"
+                ],
+                "summary": "Listar deportes activos",
+                "description": "HU-07: Devuelve los deportes activos disponibles para el usuario final.",
+                "operationId": "5369b278c4142ada5d56815afe4d99fe",
+                "responses": {
+                    "200": {
+                        "description": "Deportes activos obtenidos correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Deportes activos obtenidos correctamente."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "sport_key": {
+                                                        "type": "string",
+                                                        "example": "soccer_epl"
+                                                    },
+                                                    "group": {
+                                                        "type": "string",
+                                                        "example": "Soccer"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "EPL"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "English Premier League"
+                                                    },
+                                                    "active": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "has_outrights": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/sports": {
+            "get": {
+                "tags": [
+                    "Admin Sports"
+                ],
+                "summary": "Listar deportes para administración",
+                "description": "Devuelve deportes paginados para administración, con filtros opcionales.",
+                "operationId": "d90dbc5eeea7b8273c215ae47331229a",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Buscar por nombre, sport_key o grupo",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "soccer"
+                    },
+                    {
+                        "name": "active",
+                        "in": "query",
+                        "description": "Filtrar por estado activo/inactivo",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        },
+                        "example": true
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Cantidad de registros por página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 15
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deportes obtenidos correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/sports/sync": {
+            "post": {
+                "tags": [
+                    "Admin Sports"
+                ],
+                "summary": "Sincronizar deportes desde The Odds API",
+                "description": "HU-06: Consulta The Odds API y guarda o actualiza deportes sin duplicarlos.",
+                "operationId": "1e1b4d998b3635bc00258462a32f54b3",
+                "responses": {
+                    "200": {
+                        "description": "Deportes sincronizados correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Deportes sincronizados correctamente."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_received": {
+                                                    "type": "integer",
+                                                    "example": 70
+                                                },
+                                                "created": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "updated": {
+                                                    "type": "integer",
+                                                    "example": 60
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "500": {
+                        "description": "Error al sincronizar deportes"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/sports/{sport}/status": {
+            "patch": {
+                "tags": [
+                    "Admin Sports"
+                ],
+                "summary": "Activar o desactivar deporte",
+                "description": "HU-08: Permite a un administrador activar o desactivar un deporte.",
+                "operationId": "53252d5613f019a33414181316dae75b",
+                "parameters": [
+                    {
+                        "name": "sport",
+                        "in": "path",
+                        "description": "ID del deporte",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "active"
+                                ],
+                                "properties": {
+                                    "active": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Estado actualizado correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/events": {
+            "get": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Listar eventos deportivos disponibles",
+                "description": "HU-10: Lista eventos activos y disponibles para apostar. Permite filtrar por sport_key.",
+                "operationId": "08bb4f6a89011fba0aa159a9c841c2b5",
+                "parameters": [
+                    {
+                        "name": "sport_key",
+                        "in": "query",
+                        "description": "Clave del deporte",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "soccer_epl"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Estado del evento",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "scheduled",
+                                "live"
+                            ]
+                        },
+                        "example": "scheduled"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Fecha inicial",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-01"
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "Fecha final",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-30"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Cantidad de registros por página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 15
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Eventos deportivos obtenidos correctamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                }
+            }
+        },
+        "/admin/events/sync": {
+            "post": {
+                "tags": [
+                    "Admin Events"
+                ],
+                "summary": "Sincronizar eventos deportivos",
+                "description": "HU-09: Consulta eventos desde The Odds API por deporte activo y los guarda o actualiza.",
+                "operationId": "cfe67fee6eab6c375ba35604a86a52d0",
+                "parameters": [
+                    {
+                        "name": "sport_key",
+                        "in": "query",
+                        "description": "Sincronizar eventos de un deporte específico",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "soccer_epl"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Eventos deportivos sincronizados correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Eventos deportivos sincronizados correctamente."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "sports_processed": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "events_received": {
+                                                    "type": "integer",
+                                                    "example": 8
+                                                },
+                                                "created": {
+                                                    "type": "integer",
+                                                    "example": 8
+                                                },
+                                                "updated": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "500": {
+                        "description": "Error al sincronizar eventos"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/events/{sportEvent}": {
+            "get": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Ver detalle de un evento deportivo",
+                "description": "HU-11: Muestra el detalle del evento, estado, etiqueta en vivo/cerrado y cuotas disponibles.",
+                "operationId": "3d46ae63d76dd3b477a565f9ca2889d5",
+                "parameters": [
+                    {
+                        "name": "sportEvent",
+                        "in": "path",
+                        "description": "ID interno del evento deportivo",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalle del evento obtenido correctamente"
+                    },
+                    "404": {
+                        "description": "Evento no encontrado"
+                    }
+                }
+            }
+        },
+        "/admin/events/statuses/sync": {
+            "post": {
+                "tags": [
+                    "Admin Events"
+                ],
+                "summary": "Actualizar estados de eventos deportivos",
+                "description": "HU-12: Actualiza automáticamente estados de eventos: scheduled, live, completed o cancelled según datos disponibles.",
+                "operationId": "c0b7c96d6192d4b578b462197372ce20",
+                "parameters": [
+                    {
+                        "name": "sport_key",
+                        "in": "query",
+                        "description": "Actualizar estados de un deporte específico",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "soccer_epl"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Estados de eventos actualizados correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "500": {
+                        "description": "Error al actualizar estados"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
         "securitySchemes": {
             "sanctum": {
                 "type": "http",
-                "description": "Token personal de acceso (Authorization: Bearer {token})",
+                "description": "Token personal de acceso. Formato: Authorization: Bearer {token}",
                 "bearerFormat": "Sanctum",
                 "scheme": "bearer"
             }
@@ -295,6 +959,30 @@
         {
             "name": "Usuario",
             "description": "HU-04 Perfil"
+        },
+        {
+            "name": "Odds",
+            "description": "Odds"
+        },
+        {
+            "name": "Admin Odds",
+            "description": "Admin Odds"
+        },
+        {
+            "name": "Sports",
+            "description": "Sports"
+        },
+        {
+            "name": "Admin Sports",
+            "description": "Admin Sports"
+        },
+        {
+            "name": "Events",
+            "description": "Events"
+        },
+        {
+            "name": "Admin Events",
+            "description": "Admin Events"
         }
     ]
 }
