@@ -17,4 +17,18 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware(['auth:sanctum', 'account.active', 'role:admin'])->group(function (): void {
         Route::patch('admin/users/{user}/account', [AdminUserAccountController::class, 'update']);
     });
+use Illuminate\Support\Facades\Route;
+
+require base_path('app/Modules/Odds/Routes/api.php');
+
+Route::get('/health', function () {
+    return response()->json([
+        'success' => true,
+        'message' => 'API funcionando correctamente.',
+        'data' => [
+            'app' => config('app.name'),
+            'environment' => app()->environment(),
+            'timestamp' => now()->toISOString(),
+        ],
+    ]);
 });
