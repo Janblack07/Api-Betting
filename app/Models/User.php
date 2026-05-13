@@ -2,27 +2,31 @@
 
 namespace App\Models;
 
-use App\Models\Role;
 use App\Modules\Betting\Models\Bet;
 use App\Modules\Users\Models\UserNotification;
 use App\Modules\Wallet\Models\Wallet;
 use App\Modules\Wallet\Models\WalletTransaction;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
+
+    protected string $guard_name = 'web';
 
     protected $fillable = [
         'name',
         'email',
         'password',
         'status',
+        'blocked_at',
+        'blocked_reason',
     ];
 
     protected $hidden = [
@@ -35,17 +39,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'blocked_at' => 'datetime',
         ];
-    }
-
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Role::class,
-            'user_roles',
-            'user_id',
-            'role_id'
-        )->withTimestamps();
     }
 
     public function wallet(): HasOne
@@ -68,25 +63,14 @@ class User extends Authenticatable
         return $this->hasMany(UserNotification::class);
     }
 
-    public function hasRole(string $role): bool
-    {
-        return $this->roles()
-            ->where('name', $role)
-            ->exists();
-    }
-
-    public function assignRole(string $role): void
-    {
-        $roleModel = Role::query()
-            ->where('name', $role)
-            ->firstOrFail();
-
-        $this->roles()->syncWithoutDetaching([$roleModel->id]);
-    }
-
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    public function allowsApiAuthentication(): bool
+    {
+        return $this->isActive();
     }
 
     public function isAdmin(): bool
