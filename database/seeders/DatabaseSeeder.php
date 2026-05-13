@@ -3,23 +3,45 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Modules\Wallet\Contracts\WalletCreatorInterface;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        foreach (['admin', 'customer', 'operator'] as $roleName) {
+            Role::query()->firstOrCreate(
+                ['name' => $roleName, 'guard_name' => 'web']
+            );
+        }
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        $walletCreator = app(WalletCreatorInterface::class);
+
+        $admin = User::query()->firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Administrador',
+                'password' => 'Admin123!@#',
+                'status' => 'active',
+            ]
+        );
+        $admin->syncRoles(['admin']);
+        $walletCreator->createForUser($admin);
+
+        $customer = User::query()->firstOrCreate(
+            ['email' => 'cliente@example.com'],
+            [
+                'name' => 'Cliente Demo',
+                'password' => 'Cliente123!@#',
+                'status' => 'active',
+            ]
+        );
+        $customer->syncRoles(['customer']);
+        $walletCreator->createForUser($customer);
     }
 }
