@@ -17,6 +17,11 @@ return [
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
+    'odds_api' => [
+    'key' => env('ODDS_API_KEY'),
+    'base_url' => env('ODDS_API_BASE_URL', 'https://api.the-odds-api.com/v4'),
+    'timeout' => env('ODDS_API_TIMEOUT', 15),
+    ],
 
     'resend' => [
         'key' => env('RESEND_API_KEY'),
