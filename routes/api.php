@@ -18,19 +18,8 @@ Route::prefix('v1')->group(function (): void {
         Route::patch('admin/users/{user}/account', [AdminUserAccountController::class, 'update']);
     });
 require base_path('app/Modules/Odds/Routes/api.php');
-
-Route::get('/health', function () {
-    return response()->json([
-        'success' => true,
-        'message' => 'API funcionando correctamente.',
-        'data' => [
-            'app' => config('app.name'),
-            'environment' => app()->environment(),
-            'timestamp' => now()->toISOString(),
-        ],
-    ]);
-});
 require base_path('app/Modules/Admin/Routes/api.php');
+require base_path('app/Modules/Wallet/Routes/api.php');
 
 Route::get('/health', function () {
     return response()->json([
@@ -43,5 +32,8 @@ Route::get('/health', function () {
         ],
     ]);
 });
+
+
+
 
 });

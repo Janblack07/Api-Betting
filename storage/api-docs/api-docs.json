@@ -988,6 +988,196 @@
                     }
                 ]
             }
+        },
+        "/wallet": {
+            "get": {
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Consultar saldo de wallet",
+                "description": "HU-25: Devuelve balance, locked_balance y available_balance del usuario autenticado.",
+                "operationId": "f863ead92172148f67b60e8f85aa2632",
+                "responses": {
+                    "200": {
+                        "description": "Wallet obtenida correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/wallet/deposit": {
+            "post": {
+                "tags": [
+                    "Admin Wallet"
+                ],
+                "summary": "Registrar depósito manual",
+                "description": "HU-26: Permite al administrador aumentar saldo de un usuario.",
+                "operationId": "5750cc047babfb7649f1a9484bf31995",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 20.5
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Depósito manual de prueba"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Depósito registrado correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/wallet/withdraw": {
+            "post": {
+                "tags": [
+                    "Admin Wallet"
+                ],
+                "summary": "Registrar retiro manual",
+                "description": "HU-27: Permite al administrador descontar saldo disponible de un usuario.",
+                "operationId": "028cfb6937e55860b840bc07bd6b2477",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Retiro manual de prueba"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Retiro registrado correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/wallet/transactions": {
+            "get": {
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Listar movimientos de wallet",
+                "description": "Devuelve movimientos de wallet del usuario autenticado.",
+                "operationId": "63d87fdaf1213d2ab7b3270c19b26702",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Tipo de transacción",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "deposit"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Cantidad de registros por página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 15
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Movimientos obtenidos correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1044,6 +1234,14 @@
         {
             "name": "Admin Events",
             "description": "Admin Events"
+        },
+        {
+            "name": "Wallet",
+            "description": "Wallet"
+        },
+        {
+            "name": "Admin Wallet",
+            "description": "Admin Wallet"
         }
     ]
 }

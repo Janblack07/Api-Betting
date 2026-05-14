@@ -3,7 +3,6 @@
 namespace App\Modules\Wallet\Models;
 
 use App\Models\User;
-use App\Modules\Wallet\Models\WalletTransaction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -32,8 +31,13 @@ class Wallet extends Model
         return $this->hasMany(WalletTransaction::class);
     }
 
-    public function getAvailableBalanceAttribute(): string
+    public function availableBalance(): float
     {
-        return bcsub($this->balance, $this->locked_balance, 2);
+        return (float) $this->balance - (float) $this->locked_balance;
+    }
+
+    public function hasAvailableBalance(float $amount): bool
+    {
+        return $this->availableBalance() >= $amount;
     }
 }

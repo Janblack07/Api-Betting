@@ -16,8 +16,10 @@ class WalletUpdated implements ShouldBroadcastNow
         public readonly int $walletId,
         public readonly string $balance,
         public readonly string $lockedBalance,
+        public readonly string $availableBalance,
         public readonly string $currency,
-        public readonly ?string $transactionType = null
+        public readonly ?string $transactionType = null,
+        public readonly ?string $message = null,
     ) {
     }
 
@@ -38,8 +40,10 @@ class WalletUpdated implements ShouldBroadcastNow
             'wallet_id' => $this->walletId,
             'balance' => $this->balance,
             'locked_balance' => $this->lockedBalance,
+            'available_balance' => $this->availableBalance,
             'currency' => $this->currency,
             'transaction_type' => $this->transactionType,
+            'message' => $this->message,
             'updated_at' => now()->toISOString(),
         ];
     }
