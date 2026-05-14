@@ -11,8 +11,8 @@ use App\Modules\Odds\Services\SportService;
 use App\Modules\Shared\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Throwable;
 use OpenApi\Attributes as OA;
+use Throwable;
 
 class SportController extends Controller
 {
@@ -22,40 +22,22 @@ class SportController extends Controller
         private readonly SportService $sportService
     ) {
     }
-       #[OA\Get(
+
+    #[OA\Get(
         path: '/sports/active',
         summary: 'Listar deportes activos',
-        description: 'HU-07: Devuelve los deportes activos disponibles para el usuario final.',
+        description: 'Devuelve los deportes activos disponibles para usuarios autenticados.',
+        security: [['sanctum' => []]],
         tags: ['Sports'],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Deportes activos obtenidos correctamente',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'success', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'Deportes activos obtenidos correctamente.'),
-                        new OA\Property(
-                            property: 'data',
-                            type: 'array',
-                            items: new OA\Items(
-                                properties: [
-                                    new OA\Property(property: 'id', type: 'integer', example: 1),
-                                    new OA\Property(property: 'sport_key', type: 'string', example: 'soccer_epl'),
-                                    new OA\Property(property: 'group', type: 'string', example: 'Soccer'),
-                                    new OA\Property(property: 'title', type: 'string', example: 'EPL'),
-                                    new OA\Property(property: 'description', type: 'string', example: 'English Premier League'),
-                                    new OA\Property(property: 'active', type: 'boolean', example: true),
-                                    new OA\Property(property: 'has_outrights', type: 'boolean', example: false),
-                                ]
-                            )
-                        ),
-                    ]
-                )
+                description: 'Deportes activos obtenidos correctamente'
             ),
+            new OA\Response(response: 401, description: 'No autenticado'),
+            new OA\Response(response: 403, description: 'No autorizado'),
         ]
     )]
-
     public function active(): JsonResponse
     {
         $sports = $this->sportService->getActiveSports();
@@ -65,7 +47,8 @@ class SportController extends Controller
             'Deportes activos obtenidos correctamente.'
         );
     }
-     #[OA\Get(
+
+    #[OA\Get(
         path: '/admin/sports',
         summary: 'Listar deportes para administración',
         description: 'Devuelve deportes paginados para administración, con filtros opcionales.',
@@ -74,7 +57,7 @@ class SportController extends Controller
         parameters: [
             new OA\Parameter(
                 name: 'search',
-                description: 'Buscar por nombre, sport_key o grupo',
+                description: 'Buscar por título, sport_key o grupo',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string'),
@@ -103,7 +86,6 @@ class SportController extends Controller
             new OA\Response(response: 403, description: 'No autorizado'),
         ]
     )]
-
     public function adminIndex(Request $request): JsonResponse
     {
         $sports = $this->sportService->getAdminSports($request->only([
@@ -117,31 +99,17 @@ class SportController extends Controller
             'Deportes obtenidos correctamente.'
         );
     }
- #[OA\Post(
+
+    #[OA\Post(
         path: '/admin/sports/sync',
         summary: 'Sincronizar deportes desde The Odds API',
-        description: 'HU-06: Consulta The Odds API y guarda o actualiza deportes sin duplicarlos.',
+        description: 'Consulta The Odds API y guarda o actualiza deportes sin duplicarlos.',
         security: [['sanctum' => []]],
         tags: ['Admin Sports'],
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Deportes sincronizados correctamente',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'success', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'Deportes sincronizados correctamente.'),
-                        new OA\Property(
-                            property: 'data',
-                            properties: [
-                                new OA\Property(property: 'total_received', type: 'integer', example: 70),
-                                new OA\Property(property: 'created', type: 'integer', example: 10),
-                                new OA\Property(property: 'updated', type: 'integer', example: 60),
-                            ],
-                            type: 'object'
-                        ),
-                    ]
-                )
+                description: 'Deportes sincronizados correctamente'
             ),
             new OA\Response(response: 401, description: 'No autenticado'),
             new OA\Response(response: 403, description: 'No autorizado'),
@@ -167,10 +135,11 @@ class SportController extends Controller
             );
         }
     }
+
     #[OA\Patch(
         path: '/admin/sports/{sport}/status',
         summary: 'Activar o desactivar deporte',
-        description: 'HU-08: Permite a un administrador activar o desactivar un deporte.',
+        description: 'Permite a un administrador activar o desactivar un deporte.',
         security: [['sanctum' => []]],
         tags: ['Admin Sports'],
         parameters: [
@@ -188,18 +157,17 @@ class SportController extends Controller
             content: new OA\JsonContent(
                 required: ['active'],
                 properties: [
-                    new OA\Property(property: 'active', type: 'boolean', example: false),
+                    new OA\Property(property: 'active', type: 'boolean', example: true),
                 ]
             )
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Estado actualizado correctamente'),
+            new OA\Response(response: 200, description: 'Estado del deporte actualizado correctamente'),
             new OA\Response(response: 401, description: 'No autenticado'),
             new OA\Response(response: 403, description: 'No autorizado'),
             new OA\Response(response: 422, description: 'Error de validación'),
         ]
     )]
-
     public function toggleStatus(
         ToggleSportStatusRequest $request,
         Sport $sport

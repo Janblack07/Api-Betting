@@ -13,8 +13,8 @@ use App\Modules\Odds\Resources\SportEventResource;
 use App\Modules\Odds\Services\SportEventService;
 use App\Modules\Shared\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Throwable;
 use OpenApi\Attributes as OA;
+use Throwable;
 
 class SportEventController extends Controller
 {
@@ -24,10 +24,12 @@ class SportEventController extends Controller
         private readonly SportEventService $sportEventService
     ) {
     }
-     #[OA\Get(
+
+    #[OA\Get(
         path: '/events',
         summary: 'Listar eventos deportivos disponibles',
-        description: 'HU-10: Lista eventos activos y disponibles para apostar. Permite filtrar por sport_key.',
+        description: 'Lista eventos activos y disponibles para usuarios autenticados.',
+        security: [['sanctum' => []]],
         tags: ['Events'],
         parameters: [
             new OA\Parameter(
@@ -36,7 +38,7 @@ class SportEventController extends Controller
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string'),
-                example: 'soccer_epl'
+                example: 'soccer_australia_aleague'
             ),
             new OA\Parameter(
                 name: 'status',
@@ -60,7 +62,7 @@ class SportEventController extends Controller
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string', format: 'date'),
-                example: '2026-05-30'
+                example: '2026-05-31'
             ),
             new OA\Parameter(
                 name: 'per_page',
@@ -73,10 +75,11 @@ class SportEventController extends Controller
         ],
         responses: [
             new OA\Response(response: 200, description: 'Eventos deportivos obtenidos correctamente'),
+            new OA\Response(response: 401, description: 'No autenticado'),
+            new OA\Response(response: 403, description: 'No autorizado'),
             new OA\Response(response: 422, description: 'Error de validación'),
         ]
     )]
-
     public function index(SportEventsQueryRequest $request): JsonResponse
     {
         $events = $this->sportEventService->getAvailableEventsBySport(
@@ -88,10 +91,44 @@ class SportEventController extends Controller
             'Eventos deportivos obtenidos correctamente.'
         );
     }
- #[OA\Post(
+
+    #[OA\Get(
+        path: '/events/{sportEvent}',
+        summary: 'Ver detalle de un evento deportivo',
+        description: 'Muestra el detalle de un evento, estado, etiqueta en vivo/cerrado y cuotas disponibles.',
+        security: [['sanctum' => []]],
+        tags: ['Events'],
+        parameters: [
+            new OA\Parameter(
+                name: 'sportEvent',
+                description: 'ID interno del evento deportivo',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                example: 1
+            ),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Detalle del evento obtenido correctamente'),
+            new OA\Response(response: 401, description: 'No autenticado'),
+            new OA\Response(response: 403, description: 'No autorizado'),
+            new OA\Response(response: 404, description: 'Evento no encontrado'),
+        ]
+    )]
+    public function show(SportEvent $sportEvent): JsonResponse
+    {
+        $event = $this->sportEventService->getEventDetail($sportEvent);
+
+        return $this->successResponse(
+            new SportEventResource($event),
+            'Detalle del evento obtenido correctamente.'
+        );
+    }
+
+    #[OA\Post(
         path: '/admin/events/sync',
         summary: 'Sincronizar eventos deportivos',
-        description: 'HU-09: Consulta eventos desde The Odds API por deporte activo y los guarda o actualiza.',
+        description: 'Consulta eventos desde The Odds API por deporte activo y los guarda o actualiza.',
         security: [['sanctum' => []]],
         tags: ['Admin Events'],
         parameters: [
@@ -101,30 +138,11 @@ class SportEventController extends Controller
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string'),
-                example: 'soccer_epl'
+                example: 'soccer_australia_aleague'
             ),
         ],
         responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Eventos deportivos sincronizados correctamente',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'success', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'Eventos deportivos sincronizados correctamente.'),
-                        new OA\Property(
-                            property: 'data',
-                            properties: [
-                                new OA\Property(property: 'sports_processed', type: 'integer', example: 1),
-                                new OA\Property(property: 'events_received', type: 'integer', example: 8),
-                                new OA\Property(property: 'created', type: 'integer', example: 8),
-                                new OA\Property(property: 'updated', type: 'integer', example: 0),
-                            ],
-                            type: 'object'
-                        ),
-                    ]
-                )
-            ),
+            new OA\Response(response: 200, description: 'Eventos deportivos sincronizados correctamente'),
             new OA\Response(response: 401, description: 'No autenticado'),
             new OA\Response(response: 403, description: 'No autorizado'),
             new OA\Response(response: 500, description: 'Error al sincronizar eventos'),
@@ -151,39 +169,11 @@ class SportEventController extends Controller
             );
         }
     }
-     #[OA\Get(
-        path: '/events/{sportEvent}',
-        summary: 'Ver detalle de un evento deportivo',
-        description: 'HU-11: Muestra el detalle del evento, estado, etiqueta en vivo/cerrado y cuotas disponibles.',
-        tags: ['Events'],
-        parameters: [
-            new OA\Parameter(
-                name: 'sportEvent',
-                description: 'ID interno del evento deportivo',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                example: 1
-            ),
-        ],
-        responses: [
-            new OA\Response(response: 200, description: 'Detalle del evento obtenido correctamente'),
-            new OA\Response(response: 404, description: 'Evento no encontrado'),
-        ]
-    )]
-    public function show(SportEvent $sportEvent): JsonResponse
-{
-    $event = $this->sportEventService->getEventDetail($sportEvent);
 
-    return $this->successResponse(
-        new SportEventResource($event),
-        'Detalle del evento obtenido correctamente.'
-    );
-}
- #[OA\Post(
+    #[OA\Post(
         path: '/admin/events/statuses/sync',
         summary: 'Actualizar estados de eventos deportivos',
-        description: 'HU-12: Actualiza automáticamente estados de eventos: scheduled, live, completed o cancelled según datos disponibles.',
+        description: 'Actualiza automáticamente estados de eventos: scheduled, live, completed o cancelled según datos disponibles.',
         security: [['sanctum' => []]],
         tags: ['Admin Events'],
         parameters: [
@@ -193,7 +183,7 @@ class SportEventController extends Controller
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string'),
-                example: 'soccer_epl'
+                example: 'soccer_australia_aleague'
             ),
         ],
         responses: [
@@ -203,25 +193,25 @@ class SportEventController extends Controller
             new OA\Response(response: 500, description: 'Error al actualizar estados'),
         ]
     )]
-public function updateStatuses(
-    UpdateEventStatusesRequest $request,
-    UpdateSportEventStatusesAction $action
-): JsonResponse {
-    try {
-        $summary = $action->execute($request->validated('sport_key'));
+    public function updateStatuses(
+        UpdateEventStatusesRequest $request,
+        UpdateSportEventStatusesAction $action
+    ): JsonResponse {
+        try {
+            $summary = $action->execute($request->validated('sport_key'));
 
-        return $this->successResponse(
-            $summary,
-            'Estados de eventos actualizados correctamente.'
-        );
-    } catch (Throwable $exception) {
-        return $this->errorResponse(
-            'No se pudieron actualizar los estados de eventos.',
-            [
-                'detail' => $exception->getMessage(),
-            ],
-            500
-        );
+            return $this->successResponse(
+                $summary,
+                'Estados de eventos actualizados correctamente.'
+            );
+        } catch (Throwable $exception) {
+            return $this->errorResponse(
+                'No se pudieron actualizar los estados de eventos.',
+                [
+                    'detail' => $exception->getMessage(),
+                ],
+                500
+            );
+        }
     }
-}
 }

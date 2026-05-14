@@ -9,8 +9,8 @@ use App\Modules\Odds\Requests\SyncOddsRequest;
 use App\Modules\Odds\Services\OddsService;
 use App\Modules\Shared\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Throwable;
 use OpenApi\Attributes as OA;
+use Throwable;
 
 class OddsController extends Controller
 {
@@ -20,10 +20,12 @@ class OddsController extends Controller
         private readonly OddsService $oddsService
     ) {
     }
- #[OA\Get(
+
+    #[OA\Get(
         path: '/events/{sportEvent}/odds',
         summary: 'Listar cuotas disponibles de un evento',
-        description: 'HU-16: Devuelve cuotas activas agrupadas por mercado y bookmaker.',
+        description: 'Devuelve cuotas activas agrupadas por mercado y bookmaker para usuarios autenticados.',
+        security: [['sanctum' => []]],
         tags: ['Odds'],
         parameters: [
             new OA\Parameter(
@@ -36,30 +38,9 @@ class OddsController extends Controller
             ),
         ],
         responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Cuotas disponibles obtenidas correctamente',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'success', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'Cuotas disponibles obtenidas correctamente.'),
-                        new OA\Property(
-                            property: 'data',
-                            properties: [
-                                new OA\Property(property: 'event_id', type: 'integer', example: 1),
-                                new OA\Property(property: 'external_event_id', type: 'string', example: 'abc123'),
-                                new OA\Property(property: 'sport_key', type: 'string', example: 'soccer_epl'),
-                                new OA\Property(
-                                    property: 'markets',
-                                    type: 'array',
-                                    items: new OA\Items(type: 'object')
-                                ),
-                            ],
-                            type: 'object'
-                        ),
-                    ]
-                )
-            ),
+            new OA\Response(response: 200, description: 'Cuotas disponibles obtenidas correctamente'),
+            new OA\Response(response: 401, description: 'No autenticado'),
+            new OA\Response(response: 403, description: 'No autorizado'),
             new OA\Response(response: 404, description: 'Evento no encontrado'),
         ]
     )]
@@ -75,10 +56,11 @@ class OddsController extends Controller
             'Cuotas disponibles obtenidas correctamente.'
         );
     }
+
     #[OA\Post(
         path: '/admin/odds/sync',
         summary: 'Sincronizar cuotas desde The Odds API',
-        description: 'HU-13, HU-14 y HU-15: Consulta cuotas por deporte, región y mercado; guarda snapshots y detecta cambios por hash.',
+        description: 'Consulta cuotas por deporte, región y mercado; guarda snapshots y detecta cambios por hash.',
         security: [['sanctum' => []]],
         tags: ['Admin Odds'],
         parameters: [
@@ -88,7 +70,7 @@ class OddsController extends Controller
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string'),
-                example: 'soccer_epl'
+                example: 'soccer_australia_aleague'
             ),
             new OA\Parameter(
                 name: 'event_id',
@@ -104,7 +86,7 @@ class OddsController extends Controller
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string'),
-                example: 'eu'
+                example: 'au'
             ),
             new OA\Parameter(
                 name: 'markets',
@@ -120,36 +102,17 @@ class OddsController extends Controller
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
-                example: 10
+                example: 1
             ),
         ],
         responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Cuotas sincronizadas correctamente',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'success', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'Cuotas sincronizadas correctamente.'),
-                        new OA\Property(
-                            property: 'data',
-                            properties: [
-                                new OA\Property(property: 'events_processed', type: 'integer', example: 1),
-                                new OA\Property(property: 'created', type: 'integer', example: 6),
-                                new OA\Property(property: 'unchanged', type: 'integer', example: 2),
-                                new OA\Property(property: 'deactivated', type: 'integer', example: 1),
-                            ],
-                            type: 'object'
-                        ),
-                    ]
-                )
-            ),
+            new OA\Response(response: 200, description: 'Cuotas sincronizadas correctamente'),
             new OA\Response(response: 401, description: 'No autenticado'),
             new OA\Response(response: 403, description: 'No autorizado'),
+            new OA\Response(response: 422, description: 'Error de validación'),
             new OA\Response(response: 500, description: 'Error al sincronizar cuotas'),
         ]
     )]
-
     public function sync(SyncOddsRequest $request, SyncOddsAction $action): JsonResponse
     {
         try {

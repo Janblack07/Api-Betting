@@ -5,16 +5,30 @@ use App\Modules\Odds\Controllers\SportController;
 use App\Modules\Odds\Controllers\SportEventController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('sports')->group(function () {
-    Route::get('/active', [SportController::class, 'active']);
-});
+/*
+|--------------------------------------------------------------------------
+| Endpoints para usuarios autenticados
+|--------------------------------------------------------------------------
+| customer, operator y admin pueden ver deportes, eventos y cuotas.
+*/
+Route::middleware(['auth:sanctum', 'role:admin,operator,customer'])
+    ->group(function () {
+        Route::prefix('sports')->group(function () {
+            Route::get('/active', [SportController::class, 'active']);
+        });
 
-Route::prefix('events')->group(function () {
-    Route::get('/', [SportEventController::class, 'index']);
-    Route::get('/{sportEvent}', [SportEventController::class, 'show']);
-    Route::get('/{sportEvent}/odds', [OddsController::class, 'eventOdds']);
-});
+        Route::prefix('events')->group(function () {
+            Route::get('/', [SportEventController::class, 'index']);
+            Route::get('/{sportEvent}', [SportEventController::class, 'show']);
+            Route::get('/{sportEvent}/odds', [OddsController::class, 'eventOdds']);
+        });
+    });
 
+/*
+|--------------------------------------------------------------------------
+| Endpoints exclusivos de administrador
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth:sanctum', 'role:admin'])
     ->prefix('admin')
     ->group(function () {

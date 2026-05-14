@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserHasRole
 {
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         if (! $request->user()) {
             return response()->json([
@@ -18,14 +18,28 @@ class EnsureUserHasRole
             ], 401);
         }
 
-        if (! $request->user()->hasRole($role)) {
+        if (! $request->user()->isActive()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No tienes permisos para realizar esta acción.',
-                'errors' => null,
+                'message' => 'Tu cuenta no se encuentra activa.',
+                'errors' => [
+                    'status' => $request->user()->status,
+                ],
             ], 403);
         }
 
-        return $next($request);
+        foreach ($roles as $role) {
+            if ($request->user()->hasRole($role)) {
+                return $next($request);
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'No tienes permisos para realizar esta acción.',
+            'errors' => [
+                'required_roles' => $roles,
+            ],
+        ], 403);
     }
 }
