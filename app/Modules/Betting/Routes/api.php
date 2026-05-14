@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Betting\Controllers\AdminBetController;
 use App\Modules\Betting\Controllers\BetController;
 use App\Modules\Betting\Controllers\BetSettlementController;
 use App\Modules\Betting\Controllers\EventResultController;
@@ -21,5 +22,7 @@ Route::middleware(['auth:sanctum', 'account.active', 'role:admin'])
     ->group(function () {
         Route::post('/results/manual', [EventResultController::class, 'manual']);
         Route::post('/results/sync', [EventResultController::class, 'sync']);
+        Route::get('/bets', [AdminBetController::class, 'index']);
+        Route::get('/bets/{bet}', [AdminBetController::class, 'show']);
         Route::post('/bets/{bet}/settle', [BetSettlementController::class, 'manual']);
     });

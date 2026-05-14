@@ -12,6 +12,160 @@
         }
     ],
     "paths": {
+        "/admin/dashboard": {
+            "get": {
+                "tags": [
+                    "Admin Dashboard"
+                ],
+                "summary": "Dashboard administrativo",
+                "description": "HU-44: Devuelve métricas generales de usuarios, apuestas, saldo y consumo de The Odds API.",
+                "operationId": "4a26ad010dc1c21cb92f697bcaa0ccad",
+                "responses": {
+                    "200": {
+                        "description": "Dashboard administrativo obtenido correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "tags": [
+                    "Admin Users"
+                ],
+                "summary": "Listar usuarios en administración",
+                "description": "HU-49: Lista usuarios paginados con filtros por estado, rol y búsqueda.",
+                "operationId": "ce8863e69303d48020895fbd6aa41b83",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "active"
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "customer"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "cliente"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 15
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuarios obtenidos correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users/{user}/status": {
+            "patch": {
+                "tags": [
+                    "Admin Users"
+                ],
+                "summary": "Bloquear o desbloquear usuario",
+                "description": "HU-49: Permite cambiar el estado de un usuario desde administración.",
+                "operationId": "a5e7bd05713a6bdce9712e2e7d82be10",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 4
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "example": "blocked",
+                                        "enum": [
+                                            "active",
+                                            "blocked",
+                                            "inactive"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Estado del usuario actualizado correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/admin/api-usage": {
             "get": {
                 "tags": [
@@ -472,6 +626,121 @@
                     },
                     "403": {
                         "description": "Cuenta no disponible"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/bets": {
+            "get": {
+                "tags": [
+                    "Admin Bets"
+                ],
+                "summary": "Listar apuestas en administración",
+                "description": "HU-45: Lista todas las apuestas con filtros por usuario, estado y fecha.",
+                "operationId": "ca9a5f28f580f8d125c9076acac850b8",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 4
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "accepted"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-01"
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-31"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 15
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Apuestas obtenidas correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/bets/{bet}": {
+            "get": {
+                "tags": [
+                    "Admin Bets"
+                ],
+                "summary": "Ver detalle administrativo de apuesta",
+                "description": "HU-46: Muestra usuario, selección, snapshot, movimientos de wallet y auditoría de liquidación.",
+                "operationId": "c3fc3683557597bfd208f1392204f7dc",
+                "parameters": [
+                    {
+                        "name": "bet",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 6
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalle administrativo de apuesta obtenido correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "404": {
+                        "description": "Apuesta no encontrada"
                     }
                 },
                 "security": [
@@ -1716,12 +1985,24 @@
             "description": "HU-04 Perfil"
         },
         {
+            "name": "Admin Dashboard",
+            "description": "Admin Dashboard"
+        },
+        {
+            "name": "Admin Users",
+            "description": "Admin Users"
+        },
+        {
             "name": "Admin API Usage",
             "description": "Admin API Usage"
         },
         {
             "name": "Admin Settings",
             "description": "Admin Settings"
+        },
+        {
+            "name": "Admin Bets",
+            "description": "Admin Bets"
         },
         {
             "name": "Bets",
