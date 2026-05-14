@@ -163,9 +163,21 @@ class BetService
                 'selections.snapshot',
                 'selections.sportEvent',
                 'walletTransactions',
+                'settlementLogs',
             ])
             ->findOrFail($betId);
     }
+    public function findUserBetResult(User $user, int $betId): Bet
+{
+    return Bet::query()
+        ->where('user_id', $user->id)
+        ->with([
+            'selections.sportEvent.result',
+            'walletTransactions',
+            'settlementLogs',
+        ])
+        ->findOrFail($betId);
+}
 
     public function cancel(User $user, Bet $bet): Bet
     {

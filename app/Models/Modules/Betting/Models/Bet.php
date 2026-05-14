@@ -63,4 +63,9 @@ class Bet extends Model
     {
         return in_array($this->status, ['won', 'lost', 'refunded', 'cancelled', 'rejected'], true);
     }
+    public function settlementLogs(): HasMany
+    {
+        return $this->hasMany(BetSettlementLog::class);
+    }
+
 }

@@ -24,6 +24,7 @@ class BetResource extends JsonResource
             'cancelled_at' => $this->cancelled_at?->toISOString(),
             'selections' => BetSelectionResource::collection($this->whenLoaded('selections')),
             'wallet_transactions' => WalletTransactionResource::collection($this->whenLoaded('walletTransactions')),
+            'settlement_logs' => $this->whenLoaded('settlementLogs'),
             'created_at' => $this->created_at?->toISOString(),
         ];
     }

@@ -41,6 +41,30 @@ class OddsApiClient
 
         return $this->formatResponse($response);
     }
+    public function scores(string $sportKey, int $daysFrom = 3): array
+{
+    $response = Http::timeout((int) config('services.odds_api.timeout', 15))
+        ->get(rtrim(config('services.odds_api.base_url'), '/') . "/sports/{$sportKey}/scores", [
+            'apiKey' => config('services.odds_api.key'),
+            'daysFrom' => $daysFrom,
+            'dateFormat' => config('services.odds_api.date_format', 'iso'),
+        ]);
+
+    if ($response->failed()) {
+        throw new \RuntimeException(
+            'Error al consultar scores de The Odds API: ' . $response->body()
+        );
+    }
+
+    return [
+        'data' => $response->json(),
+        'headers' => [
+            'requests_remaining' => $response->header('x-requests-remaining'),
+            'requests_used' => $response->header('x-requests-used'),
+            'requests_last' => $response->header('x-requests-last'),
+        ],
+    ];
+}
 
     public function getEventOdds(
         string $sportKey,

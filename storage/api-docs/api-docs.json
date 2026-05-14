@@ -745,6 +745,254 @@
                 ]
             }
         },
+        "/bets/{bet}/result": {
+            "get": {
+                "tags": [
+                    "Bets"
+                ],
+                "summary": "Consultar resultado de una apuesta",
+                "description": "Permite al usuario consultar si una apuesta ganó, perdió, fue reembolsada o sigue pendiente.",
+                "operationId": "ae502aee9d4766babbe2b66e062a1620",
+                "parameters": [
+                    {
+                        "name": "bet",
+                        "in": "path",
+                        "description": "ID de la apuesta",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 6
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Resultado de apuesta obtenido correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "404": {
+                        "description": "Apuesta no encontrada"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/bets/{bet}/settle": {
+            "post": {
+                "tags": [
+                    "Admin Bet Settlement"
+                ],
+                "summary": "Liquidar apuesta manualmente",
+                "description": "HU-43: Permite al administrador liquidar una apuesta como ganada, perdida o reembolsada.",
+                "operationId": "e146ad44eb168caefee06019c36e1166",
+                "parameters": [
+                    {
+                        "name": "bet",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "result",
+                                    "observation"
+                                ],
+                                "properties": {
+                                    "result": {
+                                        "type": "string",
+                                        "example": "won",
+                                        "enum": [
+                                            "won",
+                                            "lost",
+                                            "refunded"
+                                        ]
+                                    },
+                                    "observation": {
+                                        "type": "string",
+                                        "example": "Liquidación manual por revisión administrativa."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Apuesta liquidada correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/results/manual": {
+            "post": {
+                "tags": [
+                    "Admin Results"
+                ],
+                "summary": "Cargar resultado manual de evento",
+                "description": "HU-39: Permite cargar manualmente el resultado de un evento y liquidar apuestas relacionadas.",
+                "operationId": "b72e5547bb08a9ed6e8bdc967fcff6b6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "sport_event_id",
+                                    "result_type"
+                                ],
+                                "properties": {
+                                    "sport_event_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "home_score": {
+                                        "type": "integer",
+                                        "example": 2,
+                                        "nullable": true
+                                    },
+                                    "away_score": {
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "result_type": {
+                                        "type": "string",
+                                        "example": "home",
+                                        "enum": [
+                                            "home",
+                                            "away",
+                                            "draw",
+                                            "cancelled"
+                                        ]
+                                    },
+                                    "winner_name": {
+                                        "type": "string",
+                                        "example": "Manchester City",
+                                        "nullable": true
+                                    },
+                                    "observation": {
+                                        "type": "string",
+                                        "example": "Resultado cargado manualmente.",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Resultado manual registrado correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    },
+                    "500": {
+                        "description": "Error interno del servidor"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/results/sync": {
+            "post": {
+                "tags": [
+                    "Admin Results"
+                ],
+                "summary": "Sincronizar resultados desde proveedor",
+                "description": "HU-39: Consulta scores desde The Odds API, registra resultados de eventos completados y dispara la liquidación automática de apuestas relacionadas.",
+                "operationId": "25f65068d80d20e1eef3d3842bc1d1e4",
+                "parameters": [
+                    {
+                        "name": "sport_key",
+                        "in": "query",
+                        "description": "Clave del deporte a sincronizar",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "soccer_epl"
+                    },
+                    {
+                        "name": "days_from",
+                        "in": "query",
+                        "description": "Días hacia atrás para consultar eventos completados. Máximo 3.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 3,
+                            "minimum": 1
+                        },
+                        "example": 3
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Resultados sincronizados correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    },
+                    "500": {
+                        "description": "Error al sincronizar resultados"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/events/{sportEvent}/odds": {
             "get": {
                 "tags": [
@@ -1478,6 +1726,14 @@
         {
             "name": "Bets",
             "description": "Bets"
+        },
+        {
+            "name": "Admin Bet Settlement",
+            "description": "Admin Bet Settlement"
+        },
+        {
+            "name": "Admin Results",
+            "description": "Admin Results"
         },
         {
             "name": "Odds",

@@ -10,6 +10,7 @@ use App\Modules\Betting\Requests\StoreBetRequest;
 use App\Modules\Betting\Resources\BetResource;
 use App\Modules\Betting\Services\BetService;
 use App\Modules\Shared\Traits\ApiResponse;
+use App\Modules\Betting\Resources\BetResultResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -215,4 +216,39 @@ class BetController extends Controller
             'Apuesta cancelada correctamente.'
         );
     }
+    #[OA\Get(
+    path: '/bets/{bet}/result',
+    summary: 'Consultar resultado de una apuesta',
+    description: 'Permite al usuario consultar si una apuesta ganó, perdió, fue reembolsada o sigue pendiente.',
+    security: [['sanctum' => []]],
+    tags: ['Bets'],
+    parameters: [
+        new OA\Parameter(
+            name: 'bet',
+            description: 'ID de la apuesta',
+            in: 'path',
+            required: true,
+            schema: new OA\Schema(type: 'integer'),
+            example: 6
+        ),
+    ],
+    responses: [
+        new OA\Response(response: 200, description: 'Resultado de apuesta obtenido correctamente'),
+        new OA\Response(response: 401, description: 'No autenticado'),
+        new OA\Response(response: 403, description: 'No autorizado'),
+        new OA\Response(response: 404, description: 'Apuesta no encontrada'),
+    ]
+)]
+public function result(Request $request, Bet $bet): JsonResponse
+{
+    $bet = $this->betService->findUserBetResult(
+        user: $request->user(),
+        betId: $bet->id
+    );
+
+    return $this->successResponse(
+        new BetResultResource($bet),
+        'Resultado de apuesta obtenido correctamente.'
+    );
+}
 }
