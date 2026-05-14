@@ -3,7 +3,7 @@
 namespace App\Modules\Betting\Models;
 
 use App\Models\User;
-use App\Modules\Betting\Models\BetSelection;
+use App\Modules\Wallet\Models\WalletTransaction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,8 +18,10 @@ class Bet extends Model
         'total_odds',
         'potential_win',
         'status',
+        'rejection_reason',
         'placed_at',
         'settled_at',
+        'cancelled_at',
     ];
 
     protected $casts = [
@@ -28,6 +30,7 @@ class Bet extends Model
         'potential_win' => 'decimal:2',
         'placed_at' => 'datetime',
         'settled_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -40,13 +43,24 @@ class Bet extends Model
         return $this->hasMany(BetSelection::class);
     }
 
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class, 'reference_id')
+            ->where('reference_type', 'bet');
+    }
+
     public function isPending(): bool
     {
         return $this->status === 'pending';
     }
 
+    public function isAccepted(): bool
+    {
+        return $this->status === 'accepted';
+    }
+
     public function isSettled(): bool
     {
-        return in_array($this->status, ['won', 'lost', 'refunded'], true);
+        return in_array($this->status, ['won', 'lost', 'refunded', 'cancelled', 'rejected'], true);
     }
 }

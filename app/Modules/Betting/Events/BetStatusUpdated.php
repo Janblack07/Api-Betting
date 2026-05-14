@@ -17,7 +17,8 @@ class BetStatusUpdated implements ShouldBroadcastNow
         public readonly string $code,
         public readonly string $status,
         public readonly string $totalAmount,
-        public readonly string $potentialWin
+        public readonly string $potentialWin,
+        public readonly ?string $message = null,
     ) {
     }
 
@@ -40,6 +41,7 @@ class BetStatusUpdated implements ShouldBroadcastNow
             'status' => $this->status,
             'total_amount' => $this->totalAmount,
             'potential_win' => $this->potentialWin,
+            'message' => $this->message,
             'updated_at' => now()->toISOString(),
         ];
     }

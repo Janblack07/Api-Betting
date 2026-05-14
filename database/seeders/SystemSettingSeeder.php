@@ -28,6 +28,18 @@ class SystemSettingSeeder extends Seeder
                 'type' => 'integer',
                 'description' => 'Intervalo de sincronización de cuotas en segundos.',
             ],
+            [
+                'setting_key' => 'betting.min_amount',
+                'setting_value' => '1',
+                'type' => 'decimal',
+                'description' => 'Monto mínimo permitido para crear una apuesta.',
+            ],
+            [
+                'setting_key' => 'betting.max_amount',
+                'setting_value' => '500',
+                'type' => 'decimal',
+                'description' => 'Monto máximo permitido para crear una apuesta.',
+            ],
         ];
 
         foreach ($settings as $setting) {

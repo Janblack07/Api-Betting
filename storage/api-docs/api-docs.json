@@ -481,6 +481,270 @@
                 ]
             }
         },
+        "/bets/quote": {
+            "post": {
+                "tags": [
+                    "Bets"
+                ],
+                "summary": "Calcular ganancia potencial",
+                "description": "HU-31 y HU-32: Calcula la ganancia potencial usando cuotas vigentes del backend y detecta cambios de cuota.",
+                "operationId": "5cef29dcf2a66f932e77c848043848c3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "amount",
+                                    "selections"
+                                ],
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 10
+                                    },
+                                    "selections": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "snapshot_id"
+                                            ],
+                                            "properties": {
+                                                "snapshot_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "expected_price": {
+                                                    "type": "number",
+                                                    "example": 1.85
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cotización calculada correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bets": {
+            "get": {
+                "tags": [
+                    "Bets"
+                ],
+                "summary": "Consultar historial de apuestas",
+                "description": "HU-34: Devuelve historial paginado de apuestas del usuario autenticado.",
+                "operationId": "80fc27321683b1a7b47e4e6fc93f4506",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "accepted"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 15
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historial de apuestas obtenido correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Bets"
+                ],
+                "summary": "Crear apuesta",
+                "description": "HU-30, HU-32, HU-33, HU-37 y HU-38: Crea apuesta simple o combinada usando snapshots vigentes del backend.",
+                "operationId": "0fb38bef319686e8c672cc52c4cb5b0e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "amount",
+                                    "selections"
+                                ],
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 10
+                                    },
+                                    "accept_odds_change": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "selections": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "snapshot_id"
+                                            ],
+                                            "properties": {
+                                                "snapshot_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "expected_price": {
+                                                    "type": "number",
+                                                    "example": 1.85
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Apuesta creada correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bets/{bet}": {
+            "get": {
+                "tags": [
+                    "Bets"
+                ],
+                "summary": "Ver detalle de una apuesta",
+                "description": "HU-35: Muestra detalle completo de apuesta, selecciones, snapshot usado y transacciones asociadas.",
+                "operationId": "c58953963c16c9704ad7c18869c4c71f",
+                "parameters": [
+                    {
+                        "name": "bet",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalle de apuesta obtenido correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "404": {
+                        "description": "Apuesta no encontrada"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bets/{bet}/cancel": {
+            "post": {
+                "tags": [
+                    "Bets"
+                ],
+                "summary": "Cancelar apuesta pendiente",
+                "description": "HU-36: Cancela una apuesta permitida y devuelve el saldo bloqueado.",
+                "operationId": "713761a2c034c8c871394de01ca64150",
+                "parameters": [
+                    {
+                        "name": "bet",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Apuesta cancelada correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "No se puede cancelar"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/events/{sportEvent}/odds": {
             "get": {
                 "tags": [
@@ -1210,6 +1474,10 @@
         {
             "name": "Admin Settings",
             "description": "Admin Settings"
+        },
+        {
+            "name": "Bets",
+            "description": "Bets"
         },
         {
             "name": "Odds",

@@ -20,6 +20,7 @@ Route::prefix('v1')->group(function (): void {
 require base_path('app/Modules/Odds/Routes/api.php');
 require base_path('app/Modules/Admin/Routes/api.php');
 require base_path('app/Modules/Wallet/Routes/api.php');
+require base_path('app/Modules/Betting/Routes/api.php');
 
 Route::get('/health', function () {
     return response()->json([
