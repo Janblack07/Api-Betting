@@ -3,6 +3,7 @@
 namespace App\Modules\Betting\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Betting\Events\BetRejected;
 use App\Modules\Betting\Models\Bet;
 use App\Modules\Betting\Requests\BetHistoryRequest;
 use App\Modules\Betting\Requests\QuoteBetRequest;
@@ -13,8 +14,9 @@ use App\Modules\Shared\Traits\ApiResponse;
 use App\Modules\Betting\Resources\BetResultResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use OpenApi\Attributes as OA;
-use Throwable;
+
 
 class BetController extends Controller
 {
@@ -101,19 +103,75 @@ class BetController extends Controller
         ]
     )]
     public function store(StoreBetRequest $request): JsonResponse
-    {
-        try {
-            $bet = $this->betService->create($request->user(), $request->validated());
+{
+    try {
+        $bet = $this->betService->create(
+            $request->user(),
+            $request->validated()
+        );
 
-            return $this->successResponse(
-                new BetResource($bet),
-                'Apuesta creada correctamente.',
-                201
-            );
-        } catch (Throwable $exception) {
-            throw $exception;
-        }
+        return $this->successResponse(
+            new BetResource($bet),
+            'Apuesta creada correctamente.',
+            201
+        );
+    } catch (ValidationException $exception) {
+        $errors = $exception->errors();
+
+        $reason = $this->resolveRejectionReason($errors);
+
+        event(new BetRejected(
+            userId: (int) $request->user()->getAuthIdentifier(),
+            reason: $reason,
+            message: $this->resolveRejectionMessage($reason),
+            errors: $errors
+        ));
+
+        throw $exception;
     }
+}
+private function resolveRejectionReason(array $errors): string
+{
+    $flatErrors = collect($errors)
+        ->flatten()
+        ->implode(' ');
+
+    $flatErrors = mb_strtolower($flatErrors);
+
+    if (str_contains($flatErrors, 'saldo insuficiente')) {
+        return 'insufficient_balance';
+    }
+
+    if (str_contains($flatErrors, 'evento está cerrado') || str_contains($flatErrors, 'no disponible')) {
+        return 'event_closed';
+    }
+
+    if (str_contains($flatErrors, 'cuota') || str_contains($flatErrors, 'snapshot')) {
+        return 'odds_unavailable';
+    }
+
+    if (str_contains($flatErrors, 'bloqueado') || str_contains($flatErrors, 'inactivo')) {
+        return 'user_blocked';
+    }
+
+    if (str_contains($flatErrors, 'monto mínimo') || str_contains($flatErrors, 'monto máximo')) {
+        return 'invalid_amount';
+    }
+
+    return 'validation_error';
+}
+
+private function resolveRejectionMessage(string $reason): string
+{
+    return match ($reason) {
+        'insufficient_balance' => 'Saldo insuficiente para realizar la apuesta.',
+        'event_closed' => 'El evento está cerrado o no disponible para apostar.',
+        'odds_unavailable' => 'La cuota seleccionada ya no está disponible o cambió.',
+        'user_blocked' => 'Tu cuenta no está habilitada para realizar apuestas.',
+        'invalid_amount' => 'El monto de la apuesta no cumple los límites configurados.',
+        default => 'La apuesta fue rechazada por validaciones del sistema.',
+    };
+}
 
     #[OA\Get(
         path: '/bets',
