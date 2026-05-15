@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Admin\Controllers\AdminDashboardController;
+use App\Modules\Admin\Controllers\AdminReportController;
 use App\Modules\Admin\Controllers\AdminUserController;
 use App\Modules\Admin\Controllers\ApiUsageController;
 use App\Modules\Admin\Controllers\AuditLogController;
@@ -16,6 +17,11 @@ Route::middleware(['auth:sanctum', 'account.active', 'role:admin'])
         Route::prefix('api-usage')->group(function () {
             Route::get('/', [ApiUsageController::class, 'index']);
             Route::get('/summary', [ApiUsageController::class, 'summary']);
+        });
+        Route::prefix('reports')->group(function () {
+            Route::get('/bets', [AdminReportController::class, 'bets']);
+            Route::get('/wallet-transactions', [AdminReportController::class, 'walletTransactions']);
+            Route::get('/api-usage', [AdminReportController::class, 'apiUsage']);
         });
 
         Route::prefix('settings')->group(function () {

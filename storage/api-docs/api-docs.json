@@ -38,6 +38,234 @@
                 ]
             }
         },
+        "/admin/reports/bets": {
+            "get": {
+                "tags": [
+                    "Admin Reports"
+                ],
+                "summary": "Reporte de apuestas por fecha",
+                "description": "HU-57: Genera reporte de apuestas por rango de fechas, con totales apostados, ganados y perdidos.",
+                "operationId": "5a3ac576c497db1b4439affe1e93d79a",
+                "parameters": [
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-01"
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-31"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "lost"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 15
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reporte de apuestas generado correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/reports/wallet-transactions": {
+            "get": {
+                "tags": [
+                    "Admin Reports"
+                ],
+                "summary": "Reporte de movimientos de wallet",
+                "description": "HU-58: Lista movimientos de wallet paginados con filtros por usuario, tipo y fecha.",
+                "operationId": "7d198fea3d35195e42a7222474e6d00c",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 4
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "bet_hold"
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-01"
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-31"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 15
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reporte de movimientos de wallet generado correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/reports/api-usage": {
+            "get": {
+                "tags": [
+                    "Admin Reports"
+                ],
+                "summary": "Reporte de consumo de API externa",
+                "description": "HU-59: Reporte de consumo de The Odds API con llamadas por día, créditos usados, endpoints más consumidos y errores.",
+                "operationId": "bf1fe71dcb4585b5c534282863c12116",
+                "parameters": [
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-01"
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-31"
+                    },
+                    {
+                        "name": "endpoint",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "/sports/soccer_epl/odds"
+                    },
+                    {
+                        "name": "sport_key",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "soccer_epl"
+                    },
+                    {
+                        "name": "status_code",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 200
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 15
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reporte de consumo de API generado correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/admin/users": {
             "get": {
                 "tags": [
@@ -2083,6 +2311,10 @@
         {
             "name": "Admin Dashboard",
             "description": "Admin Dashboard"
+        },
+        {
+            "name": "Admin Reports",
+            "description": "Admin Reports"
         },
         {
             "name": "Admin Users",
