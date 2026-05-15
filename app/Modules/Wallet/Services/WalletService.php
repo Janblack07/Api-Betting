@@ -4,6 +4,7 @@ namespace App\Modules\Wallet\Services;
 
 use App\Models\User;
 use App\Modules\Admin\Events\AdminDashboardUpdated;
+use App\Modules\Admin\Services\AuditService;
 use App\Modules\Wallet\Contracts\WalletCreatorInterface;
 use App\Modules\Wallet\Events\WalletUpdated;
 use App\Modules\Wallet\Models\Wallet;
@@ -13,6 +14,11 @@ use Illuminate\Validation\ValidationException;
 
 class WalletService implements WalletCreatorInterface
 {
+    public function __construct(
+        private readonly AuditService $auditService
+    ) {
+    }
+
     public function createForUser(User $user): Wallet
     {
         return Wallet::query()->firstOrCreate(
@@ -47,6 +53,7 @@ class WalletService implements WalletCreatorInterface
 
             if (! $wallet) {
                 $wallet = $this->createForUser($user);
+
                 $wallet = Wallet::query()
                     ->where('id', $wallet->id)
                     ->lockForUpdate()
@@ -83,6 +90,24 @@ class WalletService implements WalletCreatorInterface
             'amount' => number_format($amount, 2, '.', ''),
             'balance' => (string) $wallet->balance,
         ]));
+
+        $this->auditService->log(
+            module: 'wallet',
+            action: 'wallet.deposit',
+            user: $user,
+            auditable: $wallet,
+            newValues: [
+                'amount' => number_format($amount, 2, '.', ''),
+                'balance' => (string) $wallet->balance,
+                'locked_balance' => (string) $wallet->locked_balance,
+                'available_balance' => number_format($wallet->availableBalance(), 2, '.', ''),
+            ],
+            metadata: [
+                'reference_type' => $referenceType,
+                'reference_id' => $referenceId,
+                'description' => $description,
+            ]
+        );
 
         return $wallet;
     }
@@ -139,6 +164,24 @@ class WalletService implements WalletCreatorInterface
             'balance' => (string) $wallet->balance,
         ]));
 
+        $this->auditService->log(
+            module: 'wallet',
+            action: 'wallet.withdrawal',
+            user: $user,
+            auditable: $wallet,
+            newValues: [
+                'amount' => number_format($amount, 2, '.', ''),
+                'balance' => (string) $wallet->balance,
+                'locked_balance' => (string) $wallet->locked_balance,
+                'available_balance' => number_format($wallet->availableBalance(), 2, '.', ''),
+            ],
+            metadata: [
+                'reference_type' => $referenceType,
+                'reference_id' => $referenceId,
+                'description' => $description,
+            ]
+        );
+
         return $wallet;
     }
 
@@ -180,6 +223,22 @@ class WalletService implements WalletCreatorInterface
         });
 
         $this->broadcastWalletUpdated($wallet, 'bet_hold', 'Saldo bloqueado por apuesta.');
+
+        $this->auditService->log(
+            module: 'wallet',
+            action: 'wallet.bet_hold',
+            user: $user,
+            auditable: $wallet,
+            newValues: [
+                'amount' => number_format($amount, 2, '.', ''),
+                'balance' => (string) $wallet->balance,
+                'locked_balance' => (string) $wallet->locked_balance,
+                'available_balance' => number_format($wallet->availableBalance(), 2, '.', ''),
+            ],
+            metadata: [
+                'bet_id' => $betId,
+            ]
+        );
 
         return $wallet;
     }
@@ -226,6 +285,23 @@ class WalletService implements WalletCreatorInterface
 
         $this->broadcastWalletUpdated($wallet, 'bet_win', 'Apuesta ganadora liquidada.');
 
+        $this->auditService->log(
+            module: 'wallet',
+            action: 'wallet.bet_win',
+            user: $user,
+            auditable: $wallet,
+            newValues: [
+                'stake_amount' => number_format($stakeAmount, 2, '.', ''),
+                'payout_amount' => number_format($payoutAmount, 2, '.', ''),
+                'balance' => (string) $wallet->balance,
+                'locked_balance' => (string) $wallet->locked_balance,
+                'available_balance' => number_format($wallet->availableBalance(), 2, '.', ''),
+            ],
+            metadata: [
+                'bet_id' => $betId,
+            ]
+        );
+
         return $wallet;
     }
 
@@ -270,6 +346,22 @@ class WalletService implements WalletCreatorInterface
 
         $this->broadcastWalletUpdated($wallet, 'bet_loss', 'Apuesta perdida liquidada.');
 
+        $this->auditService->log(
+            module: 'wallet',
+            action: 'wallet.bet_loss',
+            user: $user,
+            auditable: $wallet,
+            newValues: [
+                'stake_amount' => number_format($stakeAmount, 2, '.', ''),
+                'balance' => (string) $wallet->balance,
+                'locked_balance' => (string) $wallet->locked_balance,
+                'available_balance' => number_format($wallet->availableBalance(), 2, '.', ''),
+            ],
+            metadata: [
+                'bet_id' => $betId,
+            ]
+        );
+
         return $wallet;
     }
 
@@ -311,6 +403,22 @@ class WalletService implements WalletCreatorInterface
         });
 
         $this->broadcastWalletUpdated($wallet, 'refund', 'Apuesta reembolsada.');
+
+        $this->auditService->log(
+            module: 'wallet',
+            action: 'wallet.refund',
+            user: $user,
+            auditable: $wallet,
+            newValues: [
+                'stake_amount' => number_format($stakeAmount, 2, '.', ''),
+                'balance' => (string) $wallet->balance,
+                'locked_balance' => (string) $wallet->locked_balance,
+                'available_balance' => number_format($wallet->availableBalance(), 2, '.', ''),
+            ],
+            metadata: [
+                'bet_id' => $betId,
+            ]
+        );
 
         return $wallet;
     }

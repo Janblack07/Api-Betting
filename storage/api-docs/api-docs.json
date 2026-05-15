@@ -284,13 +284,97 @@
                 ]
             }
         },
+        "/admin/audit-logs": {
+            "get": {
+                "tags": [
+                    "Admin Audit Logs"
+                ],
+                "summary": "Listar logs de auditoría",
+                "description": "HU-50: Lista auditoría de operaciones críticas del sistema.",
+                "operationId": "22ae6ec36dabb7863c6c9a2c8b848329",
+                "parameters": [
+                    {
+                        "name": "module",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "wallet"
+                    },
+                    {
+                        "name": "action",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "wallet.bet_hold"
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 4
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-01"
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-05-31"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 15
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Logs de auditoría obtenidos correctamente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    },
+                    "403": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/admin/settings": {
             "get": {
                 "tags": [
                     "Admin Settings"
                 ],
                 "summary": "Listar configuraciones del sistema",
-                "description": "Permite al administrador consultar región, mercado y frecuencia de sincronización configurados.",
+                "description": "Permite al administrador consultar región, mercado, montos de apuesta y frecuencia de sincronización configurados.",
                 "operationId": "7fe6af869c93c38783b399599da88a38",
                 "responses": {
                     "200": {
@@ -313,8 +397,8 @@
                 "tags": [
                     "Admin Settings"
                 ],
-                "summary": "Actualizar configuración de cuotas",
-                "description": "Permite al administrador cambiar región por defecto, mercado por defecto e intervalo de sincronización.",
+                "summary": "Actualizar configuración del sistema",
+                "description": "Permite al administrador cambiar montos mínimos/máximos de apuesta, región por defecto, mercado por defecto e intervalo de sincronización.",
                 "operationId": "1fffbb5a6b4e001ce02421e31eeb90b4",
                 "requestBody": {
                     "required": true,
@@ -322,6 +406,18 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "betting.min_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1,
+                                        "minimum": 0.01
+                                    },
+                                    "betting.max_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 500,
+                                        "minimum": 0.01
+                                    },
                                     "odds.default_region": {
                                         "type": "string",
                                         "example": "au",
@@ -1995,6 +2091,10 @@
         {
             "name": "Admin API Usage",
             "description": "Admin API Usage"
+        },
+        {
+            "name": "Admin Audit Logs",
+            "description": "Admin Audit Logs"
         },
         {
             "name": "Admin Settings",

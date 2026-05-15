@@ -4,6 +4,7 @@ namespace App\Modules\Betting\Services;
 
 use App\Models\User;
 use App\Modules\Admin\Events\AdminDashboardUpdated;
+use App\Modules\Admin\Services\AuditService;
 use App\Modules\Betting\Events\BetStatusUpdated;
 use App\Modules\Betting\Models\Bet;
 use App\Modules\Betting\Models\BetSettlementLog;
@@ -16,7 +17,8 @@ use Illuminate\Validation\ValidationException;
 class BetSettlementService
 {
     public function __construct(
-        private readonly WalletService $walletService
+        private readonly WalletService $walletService,
+        private readonly AuditService $auditService
     ) {
     }
 
@@ -45,6 +47,7 @@ class BetSettlementService
                     'away_score' => $data['away_score'] ?? null,
                     'winner_name' => $winnerName,
                     'result_type' => $data['result_type'],
+                    'status' => $data['result_type'] === 'cancelled' ? 'cancelled' : 'completed',
                     'source' => 'manual',
                     'raw_payload' => [
                         'admin_id' => $admin->id,
@@ -59,6 +62,24 @@ class BetSettlementService
                 'is_live' => false,
                 'is_active' => false,
             ]);
+
+            $this->auditService->log(
+                module: 'settlement',
+                action: 'event.result.manual',
+                user: $admin,
+                auditable: $result,
+                newValues: [
+                    'sport_event_id' => $event->id,
+                    'external_event_id' => $event->external_event_id,
+                    'result_type' => $result->result_type,
+                    'winner_name' => $result->winner_name,
+                    'status' => $result->status,
+                    'source' => $result->source,
+                ],
+                metadata: [
+                    'observation' => $data['observation'] ?? null,
+                ]
+            );
 
             $this->settleBetsByEventResult($result);
 
@@ -96,6 +117,20 @@ class BetSettlementService
                 'status' => ['Solo se pueden liquidar apuestas pendientes o aceptadas.'],
             ]);
         }
+
+        $this->auditService->log(
+            module: 'settlement',
+            action: 'bet.manual_settlement_requested',
+            user: $admin,
+            auditable: $bet,
+            oldValues: [
+                'status' => $bet->status,
+            ],
+            newValues: [
+                'requested_result' => $result,
+                'observation' => $observation,
+            ]
+        );
 
         return match ($result) {
             'won' => $this->settleWon($bet, 'manual', $observation, $admin),
@@ -367,6 +402,26 @@ class BetSettlementService
                 'potential_win' => (string) $bet->potential_win,
             ],
         ]);
+
+        $this->auditService->log(
+            module: 'settlement',
+            action: "bet.settled.{$settlementType}",
+            user: $admin,
+            auditable: $bet,
+            oldValues: [
+                'status' => $previousStatus,
+            ],
+            newValues: [
+                'status' => $settlementType,
+                'source' => $source,
+                'observation' => $observation,
+            ],
+            metadata: [
+                'total_amount' => (string) $bet->total_amount,
+                'total_odds' => (string) $bet->total_odds,
+                'potential_win' => (string) $bet->potential_win,
+            ]
+        );
     }
 
     private function broadcastBet(Bet $bet, ?string $message = null): void

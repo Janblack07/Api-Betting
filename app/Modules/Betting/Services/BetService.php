@@ -4,6 +4,7 @@ namespace App\Modules\Betting\Services;
 
 use App\Models\User;
 use App\Modules\Admin\Events\AdminDashboardUpdated;
+use App\Modules\Admin\Services\AuditService;
 use App\Modules\Admin\Services\SystemSettingService;
 use App\Modules\Betting\Events\BetStatusUpdated;
 use App\Modules\Betting\Models\Bet;
@@ -18,7 +19,8 @@ class BetService
 {
     public function __construct(
         private readonly WalletService $walletService,
-        private readonly SystemSettingService $systemSettingService
+        private readonly SystemSettingService $systemSettingService,
+        private readonly AuditService $auditService
     ) {
     }
 
@@ -139,6 +141,24 @@ class BetService
             'status' => $bet->status,
         ]));
 
+        $this->auditService->log(
+            module: 'betting',
+            action: 'bet.created',
+            user: $user,
+            auditable: $bet,
+            newValues: [
+                'code' => $bet->code,
+                'type' => $bet->type,
+                'total_amount' => (string) $bet->total_amount,
+                'total_odds' => (string) $bet->total_odds,
+                'potential_win' => (string) $bet->potential_win,
+                'status' => $bet->status,
+            ],
+            metadata: [
+                'selection_count' => $bet->selections->count(),
+            ]
+        );
+
         return $bet;
     }
 
@@ -167,17 +187,18 @@ class BetService
             ])
             ->findOrFail($betId);
     }
+
     public function findUserBetResult(User $user, int $betId): Bet
-{
-    return Bet::query()
-        ->where('user_id', $user->id)
-        ->with([
-            'selections.sportEvent.result',
-            'walletTransactions',
-            'settlementLogs',
-        ])
-        ->findOrFail($betId);
-}
+    {
+        return Bet::query()
+            ->where('user_id', $user->id)
+            ->with([
+                'selections.sportEvent.result',
+                'walletTransactions',
+                'settlementLogs',
+            ])
+            ->findOrFail($betId);
+    }
 
     public function cancel(User $user, Bet $bet): Bet
     {
@@ -229,6 +250,21 @@ class BetService
             'amount' => (string) $bet->total_amount,
             'status' => $bet->status,
         ]));
+
+        $this->auditService->log(
+            module: 'betting',
+            action: 'bet.cancelled',
+            user: $user,
+            auditable: $bet,
+            newValues: [
+                'code' => $bet->code,
+                'status' => $bet->status,
+                'cancelled_at' => $bet->cancelled_at?->toISOString(),
+            ],
+            metadata: [
+                'total_amount' => (string) $bet->total_amount,
+            ]
+        );
 
         return $bet;
     }
